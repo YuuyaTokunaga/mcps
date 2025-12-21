@@ -32,13 +32,22 @@ def main() -> None:
     app.settings.streamable_http_path = "/"  # 内部アプリのルートを mount path に直結
     app.settings.mount_path = "/"
 
-    http_app = FastAPI()
+    streamable_http_app = app.streamable_http_app()
+    session_manager = app._session_manager  # Uses FastMCP's internally created manager
+
+    async def lifespan(_: FastAPI):
+        if session_manager is None:
+            raise RuntimeError("Streamable HTTP session manager is not initialized")
+        async with session_manager.run():
+            yield
+
+    http_app = FastAPI(lifespan=lifespan)
 
     @http_app.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    http_app.mount(args.path, app.streamable_http_app())
+    http_app.mount(args.path, streamable_http_app)
 
     uvicorn.run(http_app, host=args.host, port=args.port)
 
