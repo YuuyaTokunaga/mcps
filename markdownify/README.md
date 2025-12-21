@@ -265,4 +265,20 @@ Streamable HTTP の場合、Cursor 側はURLを指定して接続します（Rem
 
 > 実際のキー名や配置場所は Cursor のMCP設定に従います（前掲Cursor Docs参照）。
 
+---
+
+## セットアップと実行（uv 利用）
+
+- 依存解決・仮想環境作成（ロック利用）: `uv sync`
+- 起動（Streamable HTTP /markdownify パスで公開）: `uv run markdownify-gateway --port 7000 --path /markdownify --transport streamable-http`
+- ヘルスチェック: `curl http://localhost:7000/health`（`{"status":"ok"}` が返れば起動確認OK）
+- 注意: `/markdownify` へのアクセスは MCP クライアント前提。`curl` だと Accept/Session ヘッダーが無く 400/406 になるのは正常。
+- ロック再生成が必要な場合のみ: `uv lock`（pyproject.toml をもとに uv.lock を更新）
+
+## Lint（Ruff）
+
+- 初回のみ（未インストールなら）: `uv add --dev ruff`
+- チェック: `uv run ruff check`
+- 自動修正: `uv run ruff check --fix`
+
 
