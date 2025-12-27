@@ -16,6 +16,9 @@ NORNICDB_BASE_PATH="${NORNICDB_BASE_PATH:-/nornicdb}"
 NORNICDB_DATA_DIR="${NORNICDB_DATA_DIR:-/mcps/nornicdb/data}"
 NORNICDB_BIN="${NORNICDB_BIN:-/mcps/nornicdb/repo/nornicdb}"
 
+CONTEXT7_HOST="${CONTEXT7_HOST:-127.0.0.1}"
+CONTEXT7_PORT="${CONTEXT7_PORT:-7103}"
+
 pids=()
 
 cleanup() {
@@ -64,10 +67,21 @@ echo "Starting nornicdb on ${NORNICDB_HOST}:${NORNICDB_HTTP_PORT}${NORNICDB_BASE
   >/tmp/mcps-nornicdb.log 2>&1 &
 pids+=("$!")
 
+echo "Starting context7 on ${CONTEXT7_HOST}:${CONTEXT7_PORT}/mcp ..."
+pushd /mcps/context7 >/dev/null
+./node_modules/.bin/context7-mcp \
+  --transport http \
+  --port "$CONTEXT7_PORT" \
+  >/tmp/mcps-context7.log 2>&1 &
+pids+=("$!")
+popd >/dev/null
+
 echo "Starting gateway on ${GATEWAY_HOST}:${GATEWAY_PORT} ..."
 pushd /mcps/gateway >/dev/null
 HOST="$GATEWAY_HOST" PORT="$GATEWAY_PORT" \
-MCP_UPSTREAMS="markdownify=http://${MARKDOWNIFY_HOST}:${MARKDOWNIFY_PORT},nornicdb=http://${NORNICDB_HOST}:${NORNICDB_HTTP_PORT}" \
+MCP_UPSTREAMS="markdownify=http://${MARKDOWNIFY_HOST}:${MARKDOWNIFY_PORT},nornicdb=http://${NORNICDB_HOST}:${NORNICDB_HTTP_PORT},context7=http://${CONTEXT7_HOST}:${CONTEXT7_PORT}" \
+MCP_STRIP_PREFIXES="context7" \
+MCP_UPSTREAM_PATH_PREFIXES="context7=/mcp" \
 uv run mcps-gateway \
   --host "$GATEWAY_HOST" \
   --port "$GATEWAY_PORT" \
@@ -75,7 +89,7 @@ uv run mcps-gateway \
 pids+=("$!")
 popd >/dev/null
 
-echo "Started. Logs: /tmp/mcps-markdownify.log , /tmp/mcps-nornicdb.log , /tmp/mcps-gateway.log"
+echo "Started. Logs: /tmp/mcps-markdownify.log , /tmp/mcps-nornicdb.log , /tmp/mcps-context7.log , /tmp/mcps-gateway.log"
 
 # Wait forever (until a signal arrives)
 wait

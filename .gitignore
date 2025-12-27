@@ -141,6 +141,13 @@ Thumbs.db
 .github/
 markdownify/sessions/
 
+# context7 (Node.js local install)
+context7/node_modules/
+context7/npm-debug.log*
+context7/yarn-debug.log*
+context7/yarn-error.log*
+context7/pnpm-debug.log*
+
 # nornicdb (generated / local-only)
 nornicdb/data/
 nornicdb/repo/data/

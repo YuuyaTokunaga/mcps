@@ -89,6 +89,24 @@ gateway は環境変数で upstream を定義します。
 	- 例:
 		- `MCP_STRIP_PREFIXES="nornicdb"`
 
+### upstream 側のパス prefix（任意）
+
+upstream が「ルート `/` ではなく、`/mcp` のような固定サブパス」でMCPを提供している場合に使います。
+
+- `MCP_UPSTREAM_PATH_PREFIXES`
+	- 形式: `name=/path[,name=/path,...]`
+	- 指定したサービスは、転送先パスの先頭に `/path` を前置します。
+	- 例:
+		- `MCP_UPSTREAM_PATH_PREFIXES="context7=/mcp"`
+
+補足:
+
+- `MCP_STRIP_PREFIXES` と `MCP_UPSTREAM_PATH_PREFIXES` は併用できます。
+	- 例: Context7 は upstream 側が `/mcp` 固定なので、
+		- 外: `http://localhost:7000/context7`
+		- 内: `http://127.0.0.1:7103/mcp`
+		のようにしたい場合、`MCP_STRIP_PREFIXES="context7"` と `MCP_UPSTREAM_PATH_PREFIXES="context7=/mcp"` を指定します。
+
 ---
 
 ## 起動方法（開発用）
@@ -196,6 +214,8 @@ stdio MCP は「プロセスが標準入出力で喋る」ため、HTTPゲート
 - upstream プロセスが起動しているか（ポートが開いているか）
 - `MCP_UPSTREAMS` のURLが正しいか
 - upstream が `GET /health` を返しているか
+
+※ upstream が `GET /health` を提供していない場合、`/<service>/health` は upstream のレスポンス（例: 404）をそのまま返します。
 
 ### 3) `/<service>/...` が 404 になる
 

@@ -52,6 +52,7 @@
 /mcps/
 	gateway/              # HTTPゲートウェイ（パスベース・リバースプロキシ）
 	markdownify/          # Excel/CSV/PDF → Markdown 変換のMCP機能
+	context7/             # Context7（最新ドキュメント取得のMCP機能）
 	nornicdb/             # NornicDB（DB + MCP）
 	feature-a/            # 将来の機能
 	feature-b/            # 将来の機能
@@ -66,6 +67,7 @@
 
 ```
 http://localhost:PORT/markdownify
+http://localhost:PORT/context7
 http://localhost:PORT/nornicdb/mcp
 ```
 
@@ -74,12 +76,14 @@ http://localhost:PORT/nornicdb/mcp
 - `./start-servers.sh` を起動すると、
 	- gateway: `http://localhost:7000`
 	- markdownify: gateway 配下の `http://localhost:7000/markdownify`（upstream は `:7101`）
+	- context7: gateway 配下の `http://localhost:7000/context7`（upstream は `:7103` / upstream の実体は `/mcp`）
 	- nornicdb: gateway 配下の `http://localhost:7000/nornicdb/mcp`（upstream は `:7102` / base-path は `/nornicdb`）
 	を立ち上げます。
 
 ログ（開発用）:
 
 - `/tmp/mcps-markdownify.log`
+- `/tmp/mcps-context7.log`
 - `/tmp/mcps-nornicdb.log`
 - `/tmp/mcps-gateway.log`
 
@@ -90,6 +94,9 @@ Cursor設定例（概念）:
 	"mcpServers": {
 		"markdownify": {
 			"url": "http://localhost:PORT/markdownify"
+		},
+		"context7": {
+			"url": "http://localhost:PORT/context7"
 		},
 		"nornicdb": {
 			"url": "http://localhost:PORT/nornicdb/mcp"

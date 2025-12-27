@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from gateway_app.config import GatewayConfig, load_config
 from gateway_app.proxy import proxy_request
@@ -42,7 +42,15 @@ def create_app(config: GatewayConfig) -> FastAPI:
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=502, detail=f"Upstream '{service}' error: {exc!s}") from exc
 
-        return JSONResponse(content=upstream_response.json(), status_code=upstream_response.status_code)
+        content_type = upstream_response.headers.get("content-type", "")
+        if content_type.startswith("application/json"):
+            return JSONResponse(content=upstream_response.json(), status_code=upstream_response.status_code)
+
+        return Response(
+            content=upstream_response.content,
+            status_code=upstream_response.status_code,
+            media_type=content_type or None,
+        )
 
     @app.api_route(
         "/{service}",
@@ -65,6 +73,7 @@ def create_app(config: GatewayConfig) -> FastAPI:
             service=service,
             path=path,
             strip_prefix=service in config.strip_prefixes,
+            upstream_path_prefix=config.upstream_path_prefixes.get(service, ""),
         )
 
     return app
@@ -83,6 +92,7 @@ def main() -> None:
             port=config.port,
             upstreams=config.upstreams,
             strip_prefixes=config.strip_prefixes,
+            upstream_path_prefixes=config.upstream_path_prefixes,
         )
     if args.port is not None:
         config = GatewayConfig(
@@ -90,6 +100,7 @@ def main() -> None:
             port=args.port,
             upstreams=config.upstreams,
             strip_prefixes=config.strip_prefixes,
+            upstream_path_prefixes=config.upstream_path_prefixes,
         )
 
     uvicorn.run(create_app(config), host=config.host, port=config.port)

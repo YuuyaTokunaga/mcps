@@ -10,6 +10,7 @@ class GatewayConfig:
     port: int
     upstreams: dict[str, str]
     strip_prefixes: set[str]
+    upstream_path_prefixes: dict[str, str]
 
 
 def _parse_upstreams(raw: str) -> dict[str, str]:
@@ -30,6 +31,35 @@ def _parse_csv_set(raw: str) -> set[str]:
     return {item.strip() for item in raw.split(",") if item.strip()}
 
 
+def _normalize_path_prefix(prefix: str) -> str:
+    prefix = prefix.strip()
+    if not prefix:
+        return ""
+    if not prefix.startswith("/"):
+        prefix = f"/{prefix}"
+    if prefix != "/" and prefix.endswith("/"):
+        prefix = prefix.rstrip("/")
+    return prefix
+
+
+def _parse_upstream_path_prefixes(raw: str) -> dict[str, str]:
+    prefixes: dict[str, str] = {}
+    for item in (part.strip() for part in raw.split(",")):
+        if not item:
+            continue
+        if "=" not in item:
+            raise ValueError(
+                f"Invalid MCP_UPSTREAM_PATH_PREFIXES entry: {item!r}. Expected 'name=/path'."
+            )
+        name, prefix = (part.strip() for part in item.split("=", 1))
+        if not name:
+            raise ValueError(
+                f"Invalid MCP_UPSTREAM_PATH_PREFIXES entry: {item!r}. Expected 'name=/path'."
+            )
+        prefixes[name] = _normalize_path_prefix(prefix)
+    return prefixes
+
+
 def load_config() -> GatewayConfig:
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "7000"))
@@ -41,4 +71,13 @@ def load_config() -> GatewayConfig:
     # Example: MCP_STRIP_PREFIXES="nornicdb"  (default: none)
     strip_prefixes = _parse_csv_set(os.getenv("MCP_STRIP_PREFIXES", ""))
 
-    return GatewayConfig(host=host, port=port, upstreams=upstreams, strip_prefixes=strip_prefixes)
+    # Example: MCP_UPSTREAM_PATH_PREFIXES="context7=/mcp"  (default: none)
+    upstream_path_prefixes = _parse_upstream_path_prefixes(os.getenv("MCP_UPSTREAM_PATH_PREFIXES", ""))
+
+    return GatewayConfig(
+        host=host,
+        port=port,
+        upstreams=upstreams,
+        strip_prefixes=strip_prefixes,
+        upstream_path_prefixes=upstream_path_prefixes,
+    )

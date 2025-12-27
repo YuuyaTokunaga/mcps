@@ -59,6 +59,14 @@ def _build_upstream_path(service: str, path: str, strip_prefix: bool) -> str:
     return f"/{service}/{suffix}" if suffix else f"/{service}"
 
 
+def _join_path_prefix(prefix: str, path: str) -> str:
+    if not prefix or prefix == "/":
+        return path
+    if path == "/":
+        return prefix
+    return f"{prefix}{path}" if path.startswith("/") else f"{prefix}/{path}"
+
+
 async def proxy_request(
     *,
     request: Request,
@@ -67,8 +75,12 @@ async def proxy_request(
     service: str,
     path: str,
     strip_prefix: bool,
+    upstream_path_prefix: str = "",
 ) -> StreamingResponse:
-    upstream_path = _build_upstream_path(service, path, strip_prefix)
+    upstream_path = _join_path_prefix(
+        upstream_path_prefix,
+        _build_upstream_path(service, path, strip_prefix),
+    )
 
     upstream_url = httpx.URL(upstream_base_url).copy_with(
         path=upstream_path,
