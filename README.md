@@ -9,7 +9,7 @@
 
 ## 要件（重要）
 
-- 複数のMCP機能を提供する（例: `markdownify` / 将来の `nornicdb` など）
+- 複数のMCP機能を提供する（例: `markdownify` / `nornicdb` など）
 - **各MCP機能は独立**し、1つの機能がダウンしても他に影響しない構成にする（**プロセス分離**）
 - IDE（主に Cursor）からの利用を想定し、各MCP機能は最も適した接続方式を選ぶ
 	- `stdio` / `SSE` / `Streamable HTTP`
@@ -52,6 +52,7 @@
 /mcps/
 	gateway/              # HTTPゲートウェイ（パスベース・リバースプロキシ）
 	markdownify/          # Excel/CSV/PDF → Markdown 変換のMCP機能
+	nornicdb/             # NornicDB（DB + MCP）
 	feature-a/            # 将来の機能
 	feature-b/            # 将来の機能
 	start-servers.sh      # 複数機能を（プロセス分離で）まとめて起動するためのスクリプト
@@ -65,7 +66,7 @@
 
 ```
 http://localhost:PORT/markdownify
-http://localhost:PORT/nornicdb
+http://localhost:PORT/nornicdb/mcp
 ```
 
 開発用の最小例（このリポジトリの現状）:
@@ -73,7 +74,14 @@ http://localhost:PORT/nornicdb
 - `./start-servers.sh` を起動すると、
 	- gateway: `http://localhost:7000`
 	- markdownify: gateway 配下の `http://localhost:7000/markdownify`（upstream は `:7101`）
+	- nornicdb: gateway 配下の `http://localhost:7000/nornicdb/mcp`（upstream は `:7102` / base-path は `/nornicdb`）
 	を立ち上げます。
+
+ログ（開発用）:
+
+- `/tmp/mcps-markdownify.log`
+- `/tmp/mcps-nornicdb.log`
+- `/tmp/mcps-gateway.log`
 
 Cursor設定例（概念）:
 
@@ -84,7 +92,7 @@ Cursor設定例（概念）:
 			"url": "http://localhost:PORT/markdownify"
 		},
 		"nornicdb": {
-			"url": "http://localhost:PORT/nornicdb"
+			"url": "http://localhost:PORT/nornicdb/mcp"
 		}
 	}
 }

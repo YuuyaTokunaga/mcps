@@ -140,3 +140,12 @@ Thumbs.db
 # Project specific
 .github/
 markdownify/sessions/
+
+# nornicdb (generated / local-only)
+nornicdb/data/
+nornicdb/repo/data/
+nornicdb/repo/models/
+nornicdb/repo/lib/llama/
+nornicdb/repo/lib/cuda/
+nornicdb/repo/nornicdb
+nornicdb/repo/nornicdb.exe
