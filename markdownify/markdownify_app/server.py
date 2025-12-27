@@ -5,7 +5,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from . import storage
-from .converters import csv_converter, excel_converter, pdf_converter
+from .converters import csv_converter, docx_converter, excel_converter, pdf_converter, pptx_converter
 
 app = FastMCP("markdownify")
 
@@ -73,6 +73,23 @@ async def convert_to_markdown(
             include_images=include_images,
             max_pages=limits.get("max_pages", 200),
             render_dpi=limits.get("render_dpi", 200),
+        )
+    elif ext == ".docx":
+        markdown_body, images, meta, warnings = docx_converter.convert_docx(
+            input_path,
+            max_paragraphs=limits.get("max_paragraphs", 10_000),
+            max_tables=limits.get("max_tables", 200),
+            max_table_rows=limits.get("max_table_rows", 5_000),
+            max_table_cols=limits.get("max_table_cols", 100),
+        )
+    elif ext == ".pptx":
+        markdown_body, images, meta, warnings = pptx_converter.convert_pptx(
+            input_path,
+            max_slides=limits.get("max_slides", 200),
+            max_shapes_per_slide=limits.get("max_shapes_per_slide", 500),
+            max_text_lines=limits.get("max_text_lines", 20_000),
+            max_table_rows=limits.get("max_table_rows", 5_000),
+            max_table_cols=limits.get("max_table_cols", 100),
         )
     else:
         raise storage.StorageError(f"unsupported extension: {ext}")

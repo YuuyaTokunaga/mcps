@@ -8,7 +8,7 @@ import time
 import uuid
 from pathlib import Path
 
-ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".pdf"}
+ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".pdf", ".docx", ".pptx"}
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 DEFAULT_TTL_SECONDS = 24 * 60 * 60
 

@@ -269,16 +269,40 @@ Streamable HTTP の場合、Cursor 側はURLを指定して接続します（Rem
 
 ## セットアップと実行（uv 利用）
 
+このリポジトリ（`/mcps/markdownify/`）では **uv** を採用しています。
+
+### 仮想環境と依存関係（uv）
+
+- 初回セットアップ（仮想環境作成 + 依存解決）: `uv sync`
+  - `.venv/` が作られ、`pyproject.toml`（および `uv.lock` がある場合はロック）に従って依存が入ります。
+- 依存の追加（例: ランタイム依存）: `uv add <package>`
+- 依存の追加（例: 開発依存）: `uv add --dev <package>`
+- ロック再生成が必要な場合のみ: `uv lock`
+
+> メモ: `uv run ...` を使うと、仮想環境を明示的に activate せずにコマンドを実行できます。
+
 - 依存解決・仮想環境作成（ロック利用）: `uv sync`
 - 起動（Streamable HTTP /markdownify パスで公開）: `uv run markdownify-gateway --port 7000 --path /markdownify --transport streamable-http`
 - ヘルスチェック: `curl http://localhost:7000/health`（`{"status":"ok"}` が返れば起動確認OK）
 - 注意: `/markdownify` へのアクセスは MCP クライアント前提。`curl` だと Accept/Session ヘッダーが無く 400/406 になるのは正常。
 - ロック再生成が必要な場合のみ: `uv lock`（pyproject.toml をもとに uv.lock を更新）
 
+### テスト（pytest）
+
+- 実行: `uv run python -m pytest -q`
+
+> 注意: 本環境では `uv run pytest` が、仮想環境内 `pytest` スクリプトのシバン不整合で失敗する場合があります。
+> その場合は上記の通り `python -m pytest` を使ってください。
+
 ## Lint（Ruff）
 
 - 初回のみ（未インストールなら）: `uv add --dev ruff`
 - チェック: `uv run ruff check`
 - 自動修正: `uv run ruff check --fix`
+
+### 便利なコマンド例
+
+- 依存同期 + Lint + テスト（最短）:
+  - `uv sync && uv run ruff check && uv run python -m pytest -q`
 
 
